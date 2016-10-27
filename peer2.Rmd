@@ -1,0 +1,43 @@
+---
+title: 'Maximum wind speeds'
+author: "Petter Delin"
+date: "27 oktober 2016"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Plot with Plotly
+Maximum wind speed for hourly observations made between March 3rd and April 18th of 2014 near Halifax Harbour. The maximum wind speed are plotted in a polar chart and are ledgened with Beaufort description of the wind speed.
+```{r,message=FALSE,warning=FALSE,fig.height=3}
+library(data.table)
+library(ocedata)
+library(plotly)
+beaufort_chars <- c("Calm","Light air","Light breeze","Gentle breeze","Moderate breeze","Fresh breeze","Strong breeze","moderate gale","Gale", "Severe gale", "Storm", "Violent Storm", "Hurricane")
+data(buoy)
+data("beaufort")
+mean_wind <- aggregate(wind~direction,data = buoy, FUN=mean)
+max_wind <- aggregate(wind~direction,data = buoy, FUN=max)
+mean_wind$beaufort <- 0
+mean_wind$beaufortChar <- 0
+max_wind$beaufort <- 0
+max_wind$beaufortChar <- 0
+for(i in 1:dim(mean_wind)[1]){
+        temp_diff <- abs(beaufort[,1]-mean_wind[i,2])
+        temp_index <- which(temp_diff == min(temp_diff), arr.ind = TRUE)
+        mean_wind$beaufort[i]<-beaufort[temp_index,1]
+        mean_wind$beaufortChar[i] <- beaufort_chars[temp_index]
+        i
+        temp_diff1 <- abs(beaufort[,1]-max_wind[i,2])
+        temp_index1 <- which(temp_diff1 == min(temp_diff1), arr.ind = TRUE)
+        max_wind$beaufort[i]<-beaufort[temp_index1,1]
+        max_wind$beaufortChar[i] <- beaufort_chars[temp_index1]
+}
+
+p2  <- plot_ly(max_wind, r = ~wind, t = ~direction,color = ~beaufortChar) %>%
+        layout(radialaxis = list(ticksuffix = "m/s"), orientation = 270,title = "Maximum Wind speed in Halifax and correlating Beauford Description" )
+p2
+```
+
